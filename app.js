@@ -245,70 +245,93 @@ function getAheadQueue() {
 /* =====================================================================
  * CSV import — column mapping + merge rules
  * ===================================================================== */
-const TARGET_FIELDS = [
-  { key: 'term', label: '英文表达块 (term) *' },
-  { key: 'meaning', label: '中文语境解释 (meaning) *' },
-  { key: 'category', label: '类别 (category)' },
-  { key: 'proficiency', label: '熟练度 (proficiency)' },
-  { key: 'stageWeek', label: '阶段/周 (stageWeek)' },
-  { key: 'imageUrl', label: '图片 (imageUrl)' },
-  { key: 'collocation', label: '固定搭配 (collocation)' },
-  { key: 'definition', label: '英文原句/定义 (definition)' },
-  { key: 'context', label: '章节语境 (context)' },
-  { key: 'forceProficiency', label: '强制熟练度 (forceProficiency)' },
-  { key: 'id', label: 'ID (仅备份文件)' },
-  { key: 'easeFactor', label: 'easeFactor (仅备份文件)' },
-  { key: 'interval', label: 'interval (仅备份文件)' },
-  { key: 'repetitions', label: 'repetitions (仅备份文件)' },
-  { key: 'due', label: 'due (仅备份文件)' }
-];
+/* Fixed header table — any CSV column whose header matches one of these is
+ * imported; unrecognised extra columns are simply ignored. No mapping dialog. */
+const HEADER_CANDIDATES = {
+  term: ['英文表达块', 'term', '英文表达', '表达块'],
+  meaning: ['中文语境解释', '语境解释', '中文解释', 'meaning'],
+  category: ['类别', '分类', 'category'],
+  proficiency: ['熟练度', '熟练程度', 'proficiency'],
+  stageWeek: ['阶段/周', '阶段', '周次', 'stageweek', 'stage'],
+  imageUrl: ['图片', '图像', 'imageurl', 'image'],
+  collocation: ['固定搭配/句式', '固定搭配', '句式', 'collocation'],
+  definition: ['英文原句', '英文定义', '原句', 'definition'],
+  context: ['章节语境', '维修侧在问什么', '语境', 'context'],
+  forceProficiency: ['强制熟练度', '强制覆盖', 'forceproficiency'],
+  id: ['id', '编号'],
+  easeFactor: ['easefactor', '难度系数'],
+  interval: ['interval', '间隔'],
+  repetitions: ['repetitions', '重复次数'],
+  due: ['due', '到期日'],
+  lastReviewed: ['lastreviewed', '上次复习']
+};
 
 function normalizeHeader(h) {
   return String(h == null ? '' : h)
+    .replace(/^\uFEFF/, '')
     .trim()
     .replace(/[(（].*$/, '')   // strip trailing (0-3) etc.
+    .replace(/[:：].*$/, '')
     .replace(/\s+/g, '')
     .toLowerCase();
 }
 
+const KNOWN_HEADER_NORMS = (function () {
+  const set = {};
+  Object.keys(HEADER_CANDIDATES).forEach(function (k) {
+    HEADER_CANDIDATES[k].forEach(function (n) { set[normalizeHeader(n)] = k; });
+  });
+  return set;
+})();
+
 function mapColumns(headers) {
-  const candidates = {
-    term: ['英文表达块', 'term'],
-    meaning: ['中文语境解释', 'meaning'],
-    category: ['类别', 'category'],
-    proficiency: ['熟练度', 'proficiency'],
-    stageWeek: ['阶段', '阶段/周', 'stageweek'],
-    imageUrl: ['图片', 'imageurl', 'image'],
-    collocation: ['固定搭配', '固定搭配/句式', 'collocation'],
-    definition: ['英文原句/定义', 'definition'],
-    context: ['章节语境', '维修侧在问什么', 'context'],
-    forceProficiency: ['强制熟练度', 'forceproficiency'],
-    id: ['id'],
-    easeFactor: ['easefactor'],
-    interval: ['interval'],
-    repetitions: ['repetitions'],
-    due: ['due']
-  };
   const normHeaders = headers.map(function (h) {
     return { orig: h, norm: normalizeHeader(h) };
   });
   const mapping = {};
-  Object.keys(candidates).forEach(function (key) {
+  const claimed = {};
+
+  // pass 1: exact header match
+  Object.keys(HEADER_CANDIDATES).forEach(function (key) {
     mapping[key] = '';
-    for (let i = 0; i < candidates[key].length; i++) {
-      const want = normalizeHeader(candidates[key][i]);
-      const hit = normHeaders.find(function (h) { return h.norm === want; });
+    for (let i = 0; i < HEADER_CANDIDATES[key].length; i++) {
+      const want = normalizeHeader(HEADER_CANDIDATES[key][i]);
+      const hit = normHeaders.find(function (h) {
+        return h.norm === want && !claimed[h.orig];
+      });
       if (hit) {
         mapping[key] = hit.orig;
+        claimed[hit.orig] = key;
         break;
       }
+    }
+  });
+
+  // pass 2: header containing the keyword (e.g. "熟练度(0-3)分") — never steal a
+  // column already mapped, and never let 强制熟练度 leak into proficiency.
+  Object.keys(HEADER_CANDIDATES).forEach(function (key) {
+    if (mapping[key]) return;
+    const hit = normHeaders.find(function (h) {
+      if (!h.norm || claimed[h.orig]) return false;
+      if (key !== 'forceProficiency' && h.norm.indexOf('强制') !== -1) return false;
+      return HEADER_CANDIDATES[key].some(function (n) {
+        const nn = normalizeHeader(n);
+        return nn.length >= 2 && h.norm.indexOf(nn) !== -1;
+      });
+    });
+    if (hit) {
+      mapping[key] = hit.orig;
+      claimed[hit.orig] = key;
     }
   });
   return mapping;
 }
 
-/* Built-in CSV engine — Papa Parse via CDN is only an optional accelerator.
- * The app must stay fully functional when jsdelivr is unreachable (offline-first). */
+/* =====================================================================
+ * Built-in CSV engine (no CDN): Excel-safe.
+ * Handles UTF-8 / UTF-16 / GBK encodings, BOM, Excel's "sep=," first line,
+ * auto delimiter (comma / semicolon / tab), quoted fields with , " and \n.
+ * ===================================================================== */
 function csvEscape(v) {
   const s = String(v == null ? '' : v);
   return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -324,9 +347,28 @@ function csvUnparse(rows) {
   return lines.join('\r\n');
 }
 
-function csvParse(text) {
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
-  const out = [];
+function stripBom(text) {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+function detectDelimiter(text) {
+  const firstLine = text.split(/\r?\n/).find(function (l) { return l.trim() !== ''; }) || '';
+  const counts = { ',': 0, ';': 0, '\t': 0 };
+  let inQ = false;
+  for (let i = 0; i < firstLine.length; i++) {
+    const ch = firstLine[i];
+    if (ch === '"') inQ = !inQ;
+    else if (!inQ && counts[ch] !== undefined) counts[ch]++;
+  }
+  let best = ',';
+  Object.keys(counts).forEach(function (d) { if (counts[d] > counts[best]) best = d; });
+  return best;
+}
+
+function csvParse(text, delimiter) {
+  text = stripBom(String(text || ''));
+  delimiter = delimiter || ',';
+  const rowsOut = [];
   let row = [], field = '', inQuotes = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -339,18 +381,18 @@ function csvParse(text) {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ',') {
+    } else if (c === delimiter) {
       row.push(field); field = '';
     } else if (c === '\n') {
-      row.push(field); out.push(row); row = []; field = '';
+      row.push(field); rowsOut.push(row); row = []; field = '';
     } else if (c !== '\r') {
       field += c;
     }
   }
-  if (field !== '' || row.length) { row.push(field); out.push(row); }
-  if (!out.length) return { headers: [], rows: [] };
-  const headers = out[0];
-  const data = out.slice(1)
+  if (field !== '' || row.length) { row.push(field); rowsOut.push(row); }
+  if (!rowsOut.length) return { headers: [], rows: [] };
+  const headers = rowsOut[0];
+  const data = rowsOut.slice(1)
     .filter(function (r) { return r.some(function (v) { return String(v).trim() !== ''; }); })
     .map(function (r) {
       const o = {};
@@ -360,37 +402,133 @@ function csvParse(text) {
   return { headers: headers, rows: data };
 }
 
-function importCSV(file) {
-  if (typeof Papa !== 'undefined') {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function (results) {
-        const headers = results.meta && results.meta.fields ? results.meta.fields : [];
-        if (!headers.length) {
-          alert('CSV 解析失败：未检测到表头');
-          return;
-        }
-        pendingImport = { rows: results.data, headers: headers };
-        showMappingUI(headers, results.data.length);
-      },
-      error: function (err) {
-        alert('CSV 解析失败: ' + err.message);
-      }
-    });
-    return;
+/* Decode a CSV file buffer. Excel on Chinese Windows writes GBK by default,
+ * which is why reading it as UTF-8 produces garbled headers. */
+function decodeCsvBuffer(buf) {
+  const bytes = new Uint8Array(buf);
+  if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+    return new TextDecoder('utf-16le').decode(buf);
   }
-  // Fallback: built-in parser (CDN unavailable)
+  if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+    return new TextDecoder('utf-16be').decode(buf);
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+  } catch (e) { /* not valid UTF-8 */ }
+  const legacy = ['gbk', 'gb18030', 'big5'];
+  for (let i = 0; i < legacy.length; i++) {
+    try {
+      const out = new TextDecoder(legacy[i]).decode(buf);
+      if (out && !/^.*\uFFFD.*$/s.test(out.slice(0, 200))) return out;
+    } catch (e2) { /* try next */ }
+  }
+  return new TextDecoder('utf-8').decode(buf);
+}
+
+/* Find the real header row: Excel may put a title row above it, or a "sep=,"
+ * line first. Scans the first 10 rows and picks the one with the most known
+ * column names; falls back to row 0. */
+function findHeaderRow(matrix) {
+  let bestIdx = 0, bestScore = 0;
+  const limit = Math.min(matrix.length, 10);
+  for (let i = 0; i < limit; i++) {
+    let score = 0;
+    matrix[i].forEach(function (cell) {
+      const n = normalizeHeader(cell);
+      if (n && KNOWN_HEADER_NORMS[n]) score++;
+    });
+    if (score > bestScore) { bestScore = score; bestIdx = i; }
+  }
+  return bestIdx;
+}
+
+function parseCsvText(rawText) {
+  let text = stripBom(String(rawText || ''));
+  // Excel sometimes writes "sep=," (or "sep=;") as the very first line.
+  const sepMatch = text.match(/^sep=([,;\t])\s*\r?\n/i);
+  if (sepMatch) {
+    text = text.slice(sepMatch[0].length);
+    const matrix = toMatrix(text, sepMatch[1]);
+    return buildResult(matrix, sepMatch[1]);
+  }
+  const delim = detectDelimiter(text);
+  const matrix = toMatrix(text, delim);
+  return buildResult(matrix, delim);
+}
+
+function toMatrix(text, delimiter) {
+  const raw = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === delimiter) {
+      row.push(field); field = '';
+    } else if (c === '\n') {
+      row.push(field); raw.push(row); row = []; field = '';
+    } else if (c !== '\r') {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); raw.push(row); }
+  return raw;
+}
+
+function buildResult(matrix, delimiter) {
+  const meaningful = matrix.filter(function (r) {
+    return r.some(function (v) { return String(v).trim() !== ''; });
+  });
+  if (!meaningful.length) return { headers: [], rows: [], delimiter: delimiter };
+  const hIdx = findHeaderRow(meaningful);
+  // drop the sep line / title rows above the header
+  const table = meaningful.slice(hIdx);
+  const headers = [];
+  table[0].forEach(function (h, i) {
+    let name = String(h == null ? '' : h).replace(/^\uFEFF/, '').trim();
+    if (!name) return; // unnamed column -> ignored
+    if (headers.indexOf(name) !== -1) {
+      let suffix = 2;
+      while (headers.indexOf(name + ' (' + suffix + ')') !== -1) suffix++;
+      name = name + ' (' + suffix + ')';
+    }
+    headers.push(name);
+  });
+  const rows = table.slice(1).map(function (r) {
+    const o = {};
+    headers.forEach(function (h, i) { o[h] = r[i] !== undefined ? r[i] : ''; });
+    return o;
+  });
+  return { headers: headers, rows: rows, delimiter: delimiter, headerRow: hIdx };
+}
+
+function importCSV(file) {
   const reader = new FileReader();
   reader.onload = function () {
     try {
-      const res = csvParse(String(reader.result || ''));
-      if (!res.headers.length) {
+      const text = decodeCsvBuffer(reader.result);
+      const parsed = parseCsvText(text);
+      if (!parsed.headers.length) {
         alert('CSV 解析失败：未检测到表头');
         return;
       }
-      pendingImport = { rows: res.rows, headers: res.headers };
-      showMappingUI(res.headers, res.rows.length);
+      const mapping = mapColumns(parsed.headers);
+      if (!mapping.term || !mapping.meaning) {
+        alert('未找到必需列。\n\n需要：英文表达块（term）、中文语境解释（meaning）\n检测到的表头：\n' +
+          parsed.headers.join(' | '));
+        return;
+      }
+      const summary = applyImport(parsed.rows, mapping);
+      showImportSummary(summary, parsed, mapping);
+      queue = [];
+      reviewAheadMode = false;
+      renderReview();
+      renderStats();
     } catch (e) {
       alert('CSV 解析失败: ' + e.message);
     }
@@ -398,7 +536,33 @@ function importCSV(file) {
   reader.onerror = function () {
     alert('CSV 读取失败');
   };
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
+}
+
+function showImportSummary(summary, parsed, mapping) {
+  const el = document.getElementById('importSummary');
+  if (!el) return;
+  const usedKeys = Object.keys(mapping).filter(function (k) { return mapping[k]; });
+  const usedHeaders = usedKeys.map(function (k) { return mapping[k]; });
+  const ignored = parsed.headers.filter(function (h) {
+    return usedHeaders.indexOf(h) === -1;
+  });
+
+  let text = summary.newCount + ' new, ' + summary.updated + ' content-updated, ' +
+    summary.protected + ' proficiency-protected, ' + summary.forced + ' proficiency-forced, ' +
+    summary.unchanged + ' unchanged' +
+    (summary.skipped ? '（跳过 ' + summary.skipped + ' 行空 term）' : '');
+  text += '\n已导入字段：' + usedKeys.map(function (k) {
+    return k + ' ← ' + mapping[k];
+  }).join('，');
+  if (ignored.length) {
+    text += '\n忽略未匹配列：' + ignored.join('、');
+  }
+  if (parsed.delimiter !== ',') {
+    text += '\n分隔符：' + (parsed.delimiter === '\t' ? '制表符' : '分号');
+  }
+  el.textContent = text;
+  if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function applyImport(rows, mapping) {
@@ -477,79 +641,12 @@ function applyImport(rows, mapping) {
   return summary;
 }
 
-function showMappingUI(headers, rowCount) {
-  const auto = mapColumns(headers);
-  const container = document.getElementById('mappingRows');
-  container.innerHTML = '';
-  TARGET_FIELDS.forEach(function (f) {
-    const row = document.createElement('div');
-    row.className = 'mapping-row';
-    const label = document.createElement('label');
-    label.textContent = f.label;
-    const select = document.createElement('select');
-    select.dataset.field = f.key;
-    const empty = document.createElement('option');
-    empty.value = '';
-    empty.textContent = '— 不导入 —';
-    select.appendChild(empty);
-    headers.forEach(function (h) {
-      const opt = document.createElement('option');
-      opt.value = h;
-      opt.textContent = h;
-      select.appendChild(opt);
-    });
-    select.value = auto[f.key] || '';
-    row.appendChild(label);
-    row.appendChild(select);
-    container.appendChild(row);
-  });
-  const info = document.createElement('p');
-  info.className = 'muted small';
-  info.textContent = '检测到 ' + rowCount + ' 行数据。';
-  container.appendChild(info);
-
-  document.getElementById('mappingView').classList.remove('hidden');
-  document.getElementById('summaryView').classList.add('hidden');
-  document.getElementById('importModal').classList.remove('hidden');
-}
-
-function confirmImport() {
-  const selects = document.querySelectorAll('#mappingRows select');
-  const mapping = {};
-  selects.forEach(function (s) { mapping[s.dataset.field] = s.value; });
-  if (!mapping.term || !mapping.meaning) {
-    alert('必须映射「英文表达块」和「中文语境解释」两列');
-    return;
-  }
-  const summary = applyImport(pendingImport.rows, mapping);
-  pendingImport = null;
-
-  const text =
-    summary.newCount + ' new, ' +
-    summary.updated + ' content-updated, ' +
-    summary.protected + ' proficiency-protected, ' +
-    summary.forced + ' proficiency-forced, ' +
-    summary.unchanged + ' unchanged' +
-    (summary.skipped ? '（跳过 ' + summary.skipped + ' 行空 term）' : '');
-  document.getElementById('summaryText').textContent = text;
-  document.getElementById('importSummary').textContent = '最近导入: ' + text;
-
-  document.getElementById('mappingView').classList.add('hidden');
-  document.getElementById('summaryView').classList.remove('hidden');
-
-  queue = [];
-  reviewAheadMode = false;
-  renderReview();
-  renderStats();
-}
-
 /* =====================================================================
  * Review UI
  * ===================================================================== */
 let cards = [];
 let queue = [];
 let reviewAheadMode = false;
-let pendingImport = null;
 let lastReviewInfo = null;
 
 function escapeHtml(s) {
@@ -856,9 +953,8 @@ function exportCSV() {
     };
   });
   try {
-    const csvText = (typeof Papa !== 'undefined') ? Papa.unparse(rows) : csvUnparse(rows);
     // BOM so Excel opens UTF-8 Chinese correctly
-    download('﻿' + csvText, 'faa-cards-' + getTodayBeijing() + '.csv', 'text/csv');
+    download('﻿' + csvUnparse(rows), 'faa-cards-' + getTodayBeijing() + '.csv', 'text/csv');
   } catch (e) {
     alert('导出失败: ' + e.message);
   }
@@ -988,15 +1084,6 @@ function init() {
     const f = e.target.files && e.target.files[0];
     if (f) importJSON(f);
     e.target.value = '';
-  });
-
-  document.getElementById('cancelImportBtn').addEventListener('click', function () {
-    pendingImport = null;
-    document.getElementById('importModal').classList.add('hidden');
-  });
-  document.getElementById('confirmImportBtn').addEventListener('click', confirmImport);
-  document.getElementById('closeSummaryBtn').addEventListener('click', function () {
-    document.getElementById('importModal').classList.add('hidden');
   });
 
   window.addEventListener('resize', drawWeekChart);

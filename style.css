@@ -402,6 +402,9 @@ button.danger:hover { background: #fef2f2; border-color: var(--danger); }
   border: 1px solid #bbf7d0;
   border-radius: 10px;
   color: #166534;
+  white-space: pre-line;
+  line-height: 1.7;
+  word-break: break-word;
 }
 .import-summary:empty { display: none; }
 

@@ -6,7 +6,6 @@
 <title>TechLog</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="./style.css">
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
 </head>
 <body>
 
@@ -161,28 +160,7 @@
   </button>
 </nav>
 
-<!-- ============ Import mapping modal ============ -->
-<div id="importModal" class="modal-overlay hidden">
-  <div class="modal">
-    <div id="mappingView">
-      <h2>导入 CSV — 列映射</h2>
-      <p class="muted small">已自动匹配中文表头，可手动调整。带 * 为必选列。</p>
-      <div id="mappingRows" class="mapping-rows"></div>
-      <div class="modal-actions">
-        <button id="cancelImportBtn">取消</button>
-        <button id="confirmImportBtn" class="primary">确认导入</button>
-      </div>
-    </div>
-    <div id="summaryView" class="hidden">
-      <h2>导入完成</h2>
-      <p id="summaryText" class="summary-text"></p>
-      <div class="modal-actions">
-        <button id="closeSummaryBtn" class="primary">完成</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<!-- ============ Import summary (inline, no modal) ============ -->
 <input type="file" id="csvFileInput" accept=".csv,text/csv" hidden>
 <input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
 
