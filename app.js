@@ -280,7 +280,7 @@ function mapColumns(headers) {
     stageWeek: ['阶段', '阶段/周', 'stageweek'],
     imageUrl: ['图片', 'imageurl', 'image'],
     collocation: ['固定搭配', '固定搭配/句式', 'collocation'],
-    definition: ['英文原句', '英文定义', 'definition'],
+    definition: ['英文原句/定义', 'definition'],
     context: ['章节语境', '维修侧在问什么', 'context'],
     forceProficiency: ['强制熟练度', 'forceproficiency'],
     id: ['id'],
@@ -307,23 +307,98 @@ function mapColumns(headers) {
   return mapping;
 }
 
+/* Built-in CSV engine — Papa Parse via CDN is only an optional accelerator.
+ * The app must stay fully functional when jsdelivr is unreachable (offline-first). */
+function csvEscape(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvUnparse(rows) {
+  if (!rows.length) return '';
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(function (r) {
+    lines.push(headers.map(function (h) { return csvEscape(r[h]); }).join(','));
+  });
+  return lines.join('\r\n');
+}
+
+function csvParse(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
+  const out = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field); field = '';
+    } else if (c === '\n') {
+      row.push(field); out.push(row); row = []; field = '';
+    } else if (c !== '\r') {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); out.push(row); }
+  if (!out.length) return { headers: [], rows: [] };
+  const headers = out[0];
+  const data = out.slice(1)
+    .filter(function (r) { return r.some(function (v) { return String(v).trim() !== ''; }); })
+    .map(function (r) {
+      const o = {};
+      headers.forEach(function (h, i) { o[h] = r[i] !== undefined ? r[i] : ''; });
+      return o;
+    });
+  return { headers: headers, rows: data };
+}
+
 function importCSV(file) {
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: function (results) {
-      const headers = results.meta && results.meta.fields ? results.meta.fields : [];
-      if (!headers.length) {
+  if (typeof Papa !== 'undefined') {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const headers = results.meta && results.meta.fields ? results.meta.fields : [];
+        if (!headers.length) {
+          alert('CSV 解析失败：未检测到表头');
+          return;
+        }
+        pendingImport = { rows: results.data, headers: headers };
+        showMappingUI(headers, results.data.length);
+      },
+      error: function (err) {
+        alert('CSV 解析失败: ' + err.message);
+      }
+    });
+    return;
+  }
+  // Fallback: built-in parser (CDN unavailable)
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const res = csvParse(String(reader.result || ''));
+      if (!res.headers.length) {
         alert('CSV 解析失败：未检测到表头');
         return;
       }
-      pendingImport = { rows: results.data, headers: headers };
-      showMappingUI(headers, results.data.length);
-    },
-    error: function (err) {
-      alert('CSV 解析失败: ' + err.message);
+      pendingImport = { rows: res.rows, headers: res.headers };
+      showMappingUI(res.headers, res.rows.length);
+    } catch (e) {
+      alert('CSV 解析失败: ' + e.message);
     }
-  });
+  };
+  reader.onerror = function () {
+    alert('CSV 读取失败');
+  };
+  reader.readAsText(file);
 }
 
 function applyImport(rows, mapping) {
@@ -780,8 +855,13 @@ function exportCSV() {
       due: c.due
     };
   });
-  // BOM so Excel opens UTF-8 Chinese correctly
-  download('﻿' + Papa.unparse(rows), 'faa-cards-' + getTodayBeijing() + '.csv', 'text/csv');
+  try {
+    const csvText = (typeof Papa !== 'undefined') ? Papa.unparse(rows) : csvUnparse(rows);
+    // BOM so Excel opens UTF-8 Chinese correctly
+    download('﻿' + csvText, 'faa-cards-' + getTodayBeijing() + '.csv', 'text/csv');
+  } catch (e) {
+    alert('导出失败: ' + e.message);
+  }
 }
 
 function exportJSON() {
