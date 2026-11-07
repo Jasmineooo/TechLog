@@ -777,6 +777,7 @@ function showAnswer() {
 
   backEl.innerHTML = html;
   backEl.classList.remove('hidden');
+  document.getElementById('cardFront').classList.add('hidden');
   document.getElementById('showAnswerBtn').classList.add('hidden');
   document.getElementById('ratingButtons').classList.remove('hidden');
 }
