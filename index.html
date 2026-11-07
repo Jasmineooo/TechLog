@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TechLog</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./style.css">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+</head>
+<body>
+
+<div id="storageBanner" class="banner hidden">
+  ⚠ 浏览器存储不可用（隐私模式或设备限制）。本次会话数据仅保存在内存中，关闭页面后将丢失，请及时使用 Export JSON 备份。
+</div>
+
+<header class="site-header">
+  <h1>TechLog</h1>
+  <p class="subtitle">FAA aviation terminology, organized for daily recall.</p>
+</header>
+
+<main class="container">
+
+  <!-- ============ View: Review ============ -->
+  <section class="panel view active" id="view-review">
+    <div class="panel-head">
+      <h2>今日复习</h2>
+      <span id="queueInfo" class="muted small"></span>
+    </div>
+
+    <div id="cardView">
+      <div id="aheadBanner" class="ahead-banner hidden">提前复习 — 该卡片尚未到期</div>
+
+      <div id="cardFront" class="card-front"></div>
+
+      <div class="center">
+        <button id="showAnswerBtn" class="primary big">Show answer</button>
+      </div>
+
+      <div id="cardBack" class="card-back hidden"></div>
+
+      <div id="ratingButtons" class="rating-grid hidden">
+        <button data-rating="0"><span class="rnum">0</span><span class="rlabel">完全遗忘<br>Blackout</span></button>
+        <button data-rating="1"><span class="rnum">1</span><span class="rlabel">错误·经提示想起<br>Incorrect, remembered</span></button>
+        <button data-rating="2"><span class="rnum">2</span><span class="rlabel">错误·轻易想起<br>Incorrect, easy recall</span></button>
+        <button data-rating="3"><span class="rnum">3</span><span class="rlabel">正确·非常困难<br>Correct, serious difficulty</span></button>
+        <button data-rating="4"><span class="rnum">4</span><span class="rlabel">正确·有犹豫<br>Correct, hesitation</span></button>
+        <button data-rating="5"><span class="rnum">5</span><span class="rlabel">完美<br>Perfect</span></button>
+      </div>
+    </div>
+
+    <div id="caughtUp" class="caught-up hidden">
+      <svg class="caught-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <p class="caught-text">All caught up · 全部复习完成</p>
+      <p class="muted small" id="caughtUpHint"></p>
+      <button id="reviewAheadBtn" class="hidden">Review ahead（复习未到期卡片）</button>
+      <button id="backToDueBtn" class="hidden">返回今日队列</button>
+    </div>
+  </section>
+
+  <!-- ============ View: Stats ============ -->
+  <section class="panel view" id="view-stats">
+    <div class="panel-head">
+      <h2>学习统计</h2>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="stat-cols">
+      <div class="stat-block">
+        <h3>熟练度分布</h3>
+        <div id="profStats"></div>
+      </div>
+      <div class="stat-block">
+        <h3>类别分布</h3>
+        <div id="catStats"></div>
+      </div>
+    </div>
+
+    <h3>近 7 天复习次数</h3>
+    <div class="chart-wrap"><canvas id="weekChart" height="160"></canvas></div>
+  </section>
+
+  <!-- ============ View: Settings ============ -->
+  <section class="panel view" id="view-settings">
+    <div class="panel-head">
+      <h2>设置</h2>
+    </div>
+
+    <h3>数据管理</h3>
+    <div class="settings-list">
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导入 CSV</div>
+          <div class="setting-desc">每日同步术语表，自动匹配中文表头，保护已有熟练度</div>
+        </div>
+        <button id="importCsvBtn" class="primary">选择文件</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导出 CSV</div>
+          <div class="setting-desc">导出全部卡片（含 SM-2 状态），可再次导入</div>
+        </div>
+        <button id="exportCsvBtn">导出</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导出 JSON 备份</div>
+          <div class="setting-desc">完整备份，包含全部复习记录 reviewLog</div>
+        </div>
+        <button id="exportJsonBtn">导出</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导入 JSON 备份</div>
+          <div class="setting-desc">恢复此前的完整备份（覆盖当前数据）</div>
+        </div>
+        <button id="importJsonBtn">选择文件</button>
+      </div>
+    </div>
+    <div id="importSummary" class="import-summary small"></div>
+
+    <h3>存储</h3>
+    <div id="storageInfo" class="storage-info small muted"></div>
+    <p class="muted small">
+      图片请放在仓库 <code>images/</code> 目录，CSV「图片」列填写相对路径，如 <code>images/Q1-W08-galvanic-CFRP-Al.jpg</code>。
+    </p>
+
+    <h3>危险操作</h3>
+    <div class="danger-zone">
+      <div class="setting-text">
+        <div class="setting-title danger-title">清空所有数据</div>
+        <div class="setting-desc">删除全部卡片与复习记录，不可恢复。建议先导出 JSON 备份。</div>
+      </div>
+      <button id="clearDataBtn" class="danger">清空数据</button>
+    </div>
+
+    <details class="debug">
+      <summary>Debug</summary>
+      <div id="debugInfo" class="small muted"></div>
+    </details>
+  </section>
+
+</main>
+
+<!-- ============ Bottom navigation ============ -->
+<nav class="bottom-nav">
+  <button class="nav-item" data-view="stats" aria-label="统计">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    <span>统计</span>
+  </button>
+  <button class="nav-item nav-review active" data-view="review" aria-label="复习">
+    <span class="nav-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </span>
+    <span>复习</span>
+  </button>
+  <button class="nav-item" data-view="settings" aria-label="设置">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>设置</span>
+  </button>
+</nav>
+
+<!-- ============ Import mapping modal ============ -->
+<div id="importModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div id="mappingView">
+      <h2>导入 CSV — 列映射</h2>
+      <p class="muted small">已自动匹配中文表头，可手动调整。带 * 为必选列。</p>
+      <div id="mappingRows" class="mapping-rows"></div>
+      <div class="modal-actions">
+        <button id="cancelImportBtn">取消</button>
+        <button id="confirmImportBtn" class="primary">确认导入</button>
+      </div>
+    </div>
+    <div id="summaryView" class="hidden">
+      <h2>导入完成</h2>
+      <p id="summaryText" class="summary-text"></p>
+      <div class="modal-actions">
+        <button id="closeSummaryBtn" class="primary">完成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="csvFileInput" accept=".csv,text/csv" hidden>
+<input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
+
+<script src="./app.js"></script>
+</body>
+</html>
