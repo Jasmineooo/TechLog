@@ -91,9 +91,12 @@
       <div class="setting-row">
         <div class="setting-text">
           <div class="setting-title">导入 CSV</div>
-          <div class="setting-desc">每日同步术语表，自动匹配中文表头，保护已有熟练度</div>
+          <div class="setting-desc">每日同步术语表，自动匹配中文表头，保护已有熟练度。手机如无法选文件，请用系统浏览器（Safari / Chrome）打开。</div>
         </div>
-        <button id="importCsvBtn" class="primary">选择文件</button>
+        <label class="file-label primary">
+          选择文件
+          <input type="file" id="csvFileInput" class="file-input">
+        </label>
       </div>
       <div class="setting-row">
         <div class="setting-text">
@@ -114,7 +117,10 @@
           <div class="setting-title">导入 JSON 备份</div>
           <div class="setting-desc">恢复此前的完整备份（覆盖当前数据）</div>
         </div>
-        <button id="importJsonBtn">选择文件</button>
+        <label class="file-label">
+          选择文件
+          <input type="file" id="jsonFileInput" class="file-input">
+        </label>
       </div>
     </div>
     <div id="importSummary" class="import-summary small"></div>
@@ -159,10 +165,6 @@
     <span>设置</span>
   </button>
 </nav>
-
-<!-- ============ Import summary (inline, no modal) ============ -->
-<input type="file" id="csvFileInput" accept=".csv,text/csv" hidden>
-<input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
 
 <script src="./app.js"></script>
 </body>

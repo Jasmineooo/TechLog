@@ -395,6 +395,47 @@ button.danger:hover { background: #fef2f2; border-color: var(--danger); }
 .setting-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .setting-row button { flex-shrink: 0; }
 
+/* File picker: a <label> wrapping the real <input type=file>. Tapping the
+ * label (or the transparent input covering it) opens the picker natively —
+ * this is far more reliable on iOS / Android / HarmonyOS than calling
+ * input.click() on a display:none element. */
+.file-label {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.file-label:active { transform: scale(0.97); }
+.file-label.primary {
+  background: var(--accent-grad);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+.file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 100px; /* iOS: enlarges the native hit area */
+}
+
 .import-summary {
   margin-top: 10px;
   padding: 10px 12px;

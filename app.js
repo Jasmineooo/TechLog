@@ -508,6 +508,19 @@ function buildResult(matrix, delimiter) {
 }
 
 function importCSV(file) {
+  const name = (file.name || '').toLowerCase();
+  if (/\.(xlsx|xls)$/.test(name)) {
+    alert('这是 Excel 工作簿（.xlsx/.xls），无法直接读取。\n请在 Excel 中「另存为 → CSV（逗号分隔）」后再导入。');
+    return;
+  }
+  if (name && !/\.(csv|txt|tsv)$/.test(name) &&
+      !confirm('所选文件「' + file.name + '」看起来不是 CSV，仍要尝试导入吗？')) {
+    return;
+  }
+  if (file.size === 0) {
+    alert('文件是空的，请检查导出是否完整。');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = function () {
     try {
@@ -534,7 +547,7 @@ function importCSV(file) {
     }
   };
   reader.onerror = function () {
-    alert('CSV 读取失败');
+    alert('读取文件失败。\n如果是手机浏览器（尤其微信内置浏览器），请改用系统浏览器（Safari / Chrome）打开本页后重试。');
   };
   reader.readAsArrayBuffer(file);
 }
@@ -970,6 +983,11 @@ function exportJSON() {
 }
 
 function importJSON(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name && !/\.(json|txt)$/.test(name) &&
+      !confirm('所选文件「' + file.name + '」不是 .json 备份，仍要尝试导入吗？')) {
+    return;
+  }
   const reader = new FileReader();
   reader.onload = function () {
     try {
@@ -1065,9 +1083,7 @@ function init() {
     renderReview();
   });
 
-  document.getElementById('importCsvBtn').addEventListener('click', function () {
-    document.getElementById('csvFileInput').click();
-  });
+  // File pickers use native <label> activation — no JS click forwarding needed.
   document.getElementById('csvFileInput').addEventListener('change', function (e) {
     const f = e.target.files && e.target.files[0];
     if (f) importCSV(f);
@@ -1077,9 +1093,6 @@ function init() {
   document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
   document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
 
-  document.getElementById('importJsonBtn').addEventListener('click', function () {
-    document.getElementById('jsonFileInput').click();
-  });
   document.getElementById('jsonFileInput').addEventListener('change', function (e) {
     const f = e.target.files && e.target.files[0];
     if (f) importJSON(f);
