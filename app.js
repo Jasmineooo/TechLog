@@ -673,6 +673,40 @@ function truncate(s, n) {
   return s.length > n ? s.slice(0, n) + '…' : s;
 }
 
+/* ---------- Text-to-speech (Web Speech API, built in, no network) ---------- */
+const SPEAKER_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M11 5 6 9H2v6h4l5 4V5z"/>' +
+  '<path d="M15.5 8.5a5 5 0 0 1 0 7"/>' +
+  '<path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+function canSpeak() {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+}
+
+/* Small speaker button; text is carried in data-speak so no inline JS is needed
+ * (escaped, so quotes/Chinese are safe). */
+function speakButton(text) {
+  const t = String(text == null ? '' : text).trim();
+  if (!t || !canSpeak()) return '';
+  return '<button type="button" class="speak-btn" data-speak="' + escapeHtml(t) +
+    '" aria-label="朗读" title="朗读">' + SPEAKER_ICON + '</button>';
+}
+
+function speakText(text) {
+  if (!text || !canSpeak()) return;
+  window.speechSynthesis.cancel(); // stop anything already playing
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.92;
+  window.speechSynthesis.speak(u);
+}
+
+function stopSpeaking() {
+  if (canSpeak()) window.speechSynthesis.cancel();
+}
+
 function handleImageError(img) {
   const div = document.createElement('div');
   div.className = 'img-placeholder';
@@ -721,6 +755,7 @@ function renderReview() {
   cardView.classList.remove('hidden');
   caughtUp.classList.add('hidden');
   backEl.classList.add('hidden');
+  frontEl.classList.remove('hidden');
   ratingsEl.classList.add('hidden');
   showBtn.classList.remove('hidden');
   aheadBanner.classList.toggle('hidden', !reviewAheadMode);
@@ -747,15 +782,15 @@ function showAnswer() {
   if (!c) return;
   const backEl = document.getElementById('cardBack');
 
-  let html = '<div class="back-term">' + escapeHtml(c.term) + '</div>';
+  let html = '<div class="back-term">' + escapeHtml(c.term) + speakButton(c.term) + '</div>';
   if (c.collocation) {
     html += '<div class="back-row"><span class="back-label">固定搭配 / Collocation</span>' +
-      '<div>' + escapeHtml(c.collocation) + '</div></div>';
+      '<div>' + escapeHtml(c.collocation) + speakButton(c.collocation) + '</div></div>';
   }
   html += '<div class="back-meaning">' + escapeHtml(c.meaning) + '</div>';
   if (c.definition) {
     html += '<div class="back-row"><span class="back-label">英文原句 / Definition</span>' +
-      '<div class="def-box">' + escapeHtml(c.definition) + '</div></div>';
+      '<div class="def-box">' + escapeHtml(c.definition) + speakButton(c.definition) + '</div></div>';
   }
   if (c.context) {
     html += '<div class="back-row"><span class="back-label">章节语境 / Context</span>' +
@@ -777,7 +812,7 @@ function showAnswer() {
 
   backEl.innerHTML = html;
   backEl.classList.remove('hidden');
-  document.getElementById('cardFront').classList.add('hidden');
+  document.getElementById('cardFront').classList.add('hidden'); // back replaces front
   document.getElementById('showAnswerBtn').classList.add('hidden');
   document.getElementById('ratingButtons').classList.remove('hidden');
 }
@@ -785,6 +820,7 @@ function showAnswer() {
 function rateCard(rating) {
   const c = queue[0];
   if (!c) return;
+  stopSpeaking();
   const oldEF = c.easeFactor;
   const oldProf = c.proficiency;
 
@@ -1065,6 +1101,14 @@ function init() {
   document.getElementById('clearDataBtn').addEventListener('click', clearData);
 
   document.getElementById('showAnswerBtn').addEventListener('click', showAnswer);
+
+  // Speaker buttons are re-rendered on every card, so delegate the clicks.
+  document.getElementById('cardBack').addEventListener('click', function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest('.speak-btn') : null;
+    if (!btn) return;
+    e.stopPropagation();
+    speakText(btn.getAttribute('data-speak'));
+  });
 
   document.querySelectorAll('#ratingButtons button').forEach(function (btn) {
     btn.addEventListener('click', function () {

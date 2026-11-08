@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TechLog</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #eef1f6;
+  --panel: #ffffff;
+  --ink: #182230;
+  --muted: #67748a;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --accent-grad: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  --border: #e4e9f0;
+  --warn-bg: #fff7ed;
+  --warn-border: #fdba74;
+  --warn-ink: #9a3412;
+  --badge-bg: #fef3c7;
+  --badge-ink: #92400e;
+  --danger: #dc2626;
+  --radius: 16px;
+  --nav-h: 62px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #e8edf5 0%, #f4f6fa 320px) fixed;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  line-height: 1.55;
+  padding-bottom: calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));
+}
+
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.center { text-align: center; }
+
+/* ---------- banner ---------- */
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: var(--warn-bg);
+  border-bottom: 1px solid var(--warn-border);
+  color: var(--warn-ink);
+  padding: 10px 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- header ---------- */
+.site-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+  color: #fff;
+  padding: 18px 16px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+.site-header h1 { margin: 0; font-size: 20px; letter-spacing: 0.02em; }
+.subtitle { margin: 2px 0 0; font-size: 12px; opacity: 0.82; }
+
+/* ---------- layout / views ---------- */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 14px 0;
+}
+
+.view { display: none; }
+.view.active {
+  display: block;
+  animation: viewIn 0.22s ease;
+}
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.panel h2 { margin: 0; font-size: 17px; }
+.panel h3 {
+  margin: 20px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- buttons ---------- */
+button {
+  font: inherit;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.15s, border-color 0.15s;
+}
+button:hover { background: #f4f7fb; border-color: #c8d3e0; }
+button:active { transform: scale(0.97); }
+button.primary {
+  background: var(--accent-grad);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+button.primary:hover { filter: brightness(1.06); background: var(--accent-grad); }
+button.big { padding: 13px 40px; font-size: 16px; border-radius: 999px; }
+button.danger {
+  border-color: #fecaca;
+  color: var(--danger);
+  background: #fff;
+}
+button.danger:hover { background: #fef2f2; border-color: var(--danger); }
+
+/* ---------- card front ---------- */
+.ahead-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.card-front { padding: 8px 0 20px; }
+.front-img {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.img-placeholder {
+  border: 2px dashed #c8d3e0;
+  border-radius: 12px;
+  background: #f7f9fc;
+  color: var(--muted);
+  text-align: center;
+  padding: 48px 12px;
+  font-size: 14px;
+  word-break: break-all;
+}
+.prompt {
+  font-size: 20px;
+  text-align: center;
+  margin: 14px 0;
+  line-height: 1.6;
+}
+.hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+  margin: 12px 0 0;
+}
+.tag-row { text-align: center; margin-top: 12px; }
+.tag {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  padding: 3px 14px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ---------- card back ---------- */
+.card-back {
+  border-top: 1px solid var(--border);
+  margin-top: 18px;
+  padding-top: 18px;
+}
+.back-term {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  word-break: break-word;
+  letter-spacing: 0.01em;
+}
+.back-row { margin-bottom: 14px; }
+
+/* Pronunciation button — inline next to English text on the card back */
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: var(--accent);
+  cursor: pointer;
+  vertical-align: middle;
+  flex: 0 0 auto;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.speak-btn:hover { background: #e0e7ff; }
+.speak-btn:active { transform: scale(0.9); background: #dbeafe; }
+.speak-btn svg { width: 16px; height: 16px; display: block; }
+.def-box .speak-btn { margin-left: 8px; }
+.back-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.back-meaning { font-size: 17px; margin-bottom: 14px; line-height: 1.65; }
+.def-box {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: #f7f9fc;
+  padding: 12px 14px;
+}
+.context { font-style: italic; color: var(--muted); }
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.badge {
+  display: inline-block;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 8px;
+}
+.back-img {
+  display: block;
+  max-width: 60%;
+  max-height: 180px;
+  object-fit: contain;
+  margin: 14px auto 0;
+  border-radius: 10px;
+}
+
+/* ---------- rating ---------- */
+.rating-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 22px;
+}
+.rating-grid button {
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.rating-grid button:hover {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+.rnum { font-size: 20px; font-weight: 700; }
+.rating-grid button[data-rating="0"] .rnum,
+.rating-grid button[data-rating="1"] .rnum,
+.rating-grid button[data-rating="2"] .rnum { color: var(--danger); }
+.rating-grid button[data-rating="3"] .rnum { color: #d97706; }
+.rating-grid button[data-rating="4"] .rnum { color: #16a34a; }
+.rating-grid button[data-rating="5"] .rnum { color: var(--accent); }
+.rlabel {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* ---------- caught up ---------- */
+.caught-up { text-align: center; padding: 36px 0 28px; }
+.caught-icon {
+  width: 56px;
+  height: 56px;
+  color: #16a34a;
+  background: #f0fdf4;
+  border-radius: 50%;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.caught-text { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+.caught-up button { margin-top: 12px; }
+
+/* ---------- stats ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stat-box {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  background: linear-gradient(180deg, #f8fafc, #fff);
+}
+.stat-num {
+  font-size: 26px;
+  font-weight: 700;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.stat-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.stat-block {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fbfcfe;
+  margin-top: 14px;
+}
+.stat-block h3 { margin-top: 0; }
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.bar-row:last-child { margin-bottom: 0; }
+.bar-name {
+  flex: 0 0 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.bar-track {
+  flex: 1;
+  display: block;
+  background: #edf1f7;
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;          /* span defaults to inline: width/height would be ignored */
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-grad);
+  transition: width 0.35s ease;
+}
+.bar-count { flex: 0 0 28px; text-align: right; color: var(--muted); }
+
+.chart-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px;
+  background: #fbfcfe;
+}
+#weekChart { display: block; }
+
+/* ---------- settings ---------- */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fbfcfe;
+}
+.setting-text { flex: 1; min-width: 0; }
+.setting-title { font-size: 14px; font-weight: 600; }
+.setting-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.setting-row button { flex-shrink: 0; }
+
+/* File picker: a <label> wrapping the real <input type=file>. Tapping the
+ * label (or the transparent input covering it) opens the picker natively —
+ * this is far more reliable on iOS / Android / HarmonyOS than calling
+ * input.click() on a display:none element. */
+.file-label {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.file-label:active { transform: scale(0.97); }
+.file-label.primary {
+  background: var(--accent-grad);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+.file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 100px; /* iOS: enlarges the native hit area */
+}
+
+.import-summary {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #166534;
+  white-space: pre-line;
+  line-height: 1.7;
+  word-break: break-word;
+}
+.import-summary:empty { display: none; }
+
+.storage-info {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfcfe;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.danger-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #fecaca;
+  background: #fffbfb;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.danger-zone .setting-text { flex: 1; }
+.danger-title { color: var(--danger); }
+.danger-zone button { flex-shrink: 0; }
+
+/* ---------- debug ---------- */
+.debug {
+  margin-top: 18px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}
+.debug summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+#debugInfo { margin-top: 8px; white-space: pre-wrap; }
+
+code {
+  background: #eef2f7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
+/* ---------- bottom navigation ---------- */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.nav-item {
+  border: none;
+  background: none;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.nav-item:hover { background: none; border: none; }
+.nav-item:active { transform: none; }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item.active { color: var(--accent); font-weight: 600; }
+
+.nav-review { position: relative; }
+.nav-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--accent-grad);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -30px;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45), 0 0 0 5px rgba(255, 255, 255, 0.9);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nav-review:hover .nav-circle { transform: translateY(-2px); }
+.nav-review .nav-circle svg { width: 26px; height: 26px; }
+.nav-review.active { color: var(--accent); }
+.nav-review span:last-child { margin-top: 2px; }
+
+/* ---------- modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 12px;
+  overflow-y: auto;
+}
+.modal {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  animation: viewIn 0.2s ease;
+}
+.modal h2 { margin: 0 0 6px; font-size: 18px; }
+.mapping-rows { margin: 16px 0; max-height: 55vh; overflow-y: auto; }
+.mapping-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.mapping-row label { flex: 0 0 170px; font-size: 13px; }
+.mapping-row select {
+  flex: 1;
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 100%;
+  background: #fff;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.summary-text { font-size: 15px; }
+
+/* ---------- mobile ---------- */
+@media (max-width: 640px) {
+  .container { padding: 12px 10px 0; }
+  .panel { padding: 16px 14px; }
+  .rating-grid { grid-template-columns: repeat(3, 1fr); }
+  .stat-cols { grid-template-columns: 1fr; }
+  .back-term { font-size: 24px; }
+  .prompt { font-size: 17px; }
+  .mapping-row { flex-direction: column; align-items: stretch; gap: 4px; }
+  .mapping-row label { flex: none; }
+  .back-img { max-width: 100%; }
+  .setting-row { align-items: flex-start; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="storageBanner" class="banner hidden">
+  ⚠ 浏览器存储不可用（隐私模式或设备限制）。本次会话数据仅保存在内存中，关闭页面后将丢失，请及时使用 Export JSON 备份。
+</div>
+
+<header class="site-header">
+  <h1>TechLog</h1>
+  <p class="subtitle">FAA Aviation Terminology, Organized for Daily Recall.</p>
+</header>
+
+<main class="container">
+
+  <!-- ============ View: Review ============ -->
+  <section class="panel view active" id="view-review">
+    <div class="panel-head">
+      <h2>今日复习</h2>
+      <span id="queueInfo" class="muted small"></span>
+    </div>
+
+    <div id="cardView">
+      <div id="aheadBanner" class="ahead-banner hidden">提前复习 — 该卡片尚未到期</div>
+
+      <div id="cardFront" class="card-front"></div>
+
+      <div class="center">
+        <button id="showAnswerBtn" class="primary big">Show answer</button>
+      </div>
+
+      <div id="cardBack" class="card-back hidden"></div>
+
+      <div id="ratingButtons" class="rating-grid hidden">
+        <button data-rating="0"><span class="rnum">0</span><span class="rlabel">完全遗忘<br>Blackout</span></button>
+        <button data-rating="1"><span class="rnum">1</span><span class="rlabel">错误·经提示想起<br>Incorrect, remembered</span></button>
+        <button data-rating="2"><span class="rnum">2</span><span class="rlabel">错误·轻易想起<br>Incorrect, easy recall</span></button>
+        <button data-rating="3"><span class="rnum">3</span><span class="rlabel">正确·非常困难<br>Correct, serious difficulty</span></button>
+        <button data-rating="4"><span class="rnum">4</span><span class="rlabel">正确·有犹豫<br>Correct, hesitation</span></button>
+        <button data-rating="5"><span class="rnum">5</span><span class="rlabel">完美<br>Perfect</span></button>
+      </div>
+    </div>
+
+    <div id="caughtUp" class="caught-up hidden">
+      <svg class="caught-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <p class="caught-text">All caught up · 全部复习完成</p>
+      <p class="muted small" id="caughtUpHint"></p>
+      <button id="reviewAheadBtn" class="hidden">Review ahead（复习未到期卡片）</button>
+      <button id="backToDueBtn" class="hidden">返回今日队列</button>
+    </div>
+  </section>
+
+  <!-- ============ View: Stats ============ -->
+  <section class="panel view" id="view-stats">
+    <div class="panel-head">
+      <h2>学习统计</h2>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="stat-cols">
+      <div class="stat-block">
+        <h3>熟练度分布</h3>
+        <div id="profStats"></div>
+      </div>
+      <div class="stat-block">
+        <h3>类别分布</h3>
+        <div id="catStats"></div>
+      </div>
+    </div>
+
+    <h3>近 7 天复习次数</h3>
+    <div class="chart-wrap"><canvas id="weekChart" height="160"></canvas></div>
+  </section>
+
+  <!-- ============ View: Settings ============ -->
+  <section class="panel view" id="view-settings">
+    <div class="panel-head">
+      <h2>设置</h2>
+    </div>
+
+    <h3>数据管理</h3>
+    <div class="settings-list">
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导入 CSV</div>
+          <div class="setting-desc">每日同步术语表，自动匹配中文表头，保护已有熟练度。手机如无法选文件，请用系统浏览器（Safari / Chrome）打开。</div>
+        </div>
+        <label class="file-label primary">
+          选择文件
+          <input type="file" id="csvFileInput" class="file-input">
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导出 CSV</div>
+          <div class="setting-desc">导出全部卡片（含 SM-2 状态），可再次导入</div>
+        </div>
+        <button id="exportCsvBtn">导出</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导出 JSON 备份</div>
+          <div class="setting-desc">完整备份，包含全部复习记录 reviewLog</div>
+        </div>
+        <button id="exportJsonBtn">导出</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">导入 JSON 备份</div>
+          <div class="setting-desc">恢复此前的完整备份（覆盖当前数据）</div>
+        </div>
+        <label class="file-label">
+          选择文件
+          <input type="file" id="jsonFileInput" class="file-input">
+        </label>
+      </div>
+    </div>
+    <div id="importSummary" class="import-summary small"></div>
+
+    <h3>存储</h3>
+    <div id="storageInfo" class="storage-info small muted"></div>
+    <p class="muted small">
+      图片请放在仓库 <code>images/</code> 目录，CSV「图片」列填写相对路径，如 <code>images/Q1-W08-galvanic-CFRP-Al.jpg</code>。
+    </p>
+
+    <h3>危险操作</h3>
+    <div class="danger-zone">
+      <div class="setting-text">
+        <div class="setting-title danger-title">清空所有数据</div>
+        <div class="setting-desc">删除全部卡片与复习记录，不可恢复。建议先导出 JSON 备份。</div>
+      </div>
+      <button id="clearDataBtn" class="danger">清空数据</button>
+    </div>
+
+    <details class="debug">
+      <summary>Debug</summary>
+      <div id="debugInfo" class="small muted"></div>
+    </details>
+  </section>
+
+</main>
+
+<!-- ============ Bottom navigation ============ -->
+<nav class="bottom-nav">
+  <button class="nav-item" data-view="stats" aria-label="统计">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    <span>统计</span>
+  </button>
+  <button class="nav-item nav-review active" data-view="review" aria-label="复习">
+    <span class="nav-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    </span>
+    <span>复习</span>
+  </button>
+  <button class="nav-item" data-view="settings" aria-label="设置">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>设置</span>
+  </button>
+</nav>
+
+<script>
+'use strict';
+
+/* =====================================================================
+ * Storage: localStorage with in-memory fallback (private mode / HarmonyOS)
+ * ===================================================================== */
+const STORE_KEY = 'faa_srs_cards';
+let storageAvailable = false;
+const memoryStore = {};
+try {
+  const t = '__srs_test__';
+  localStorage.setItem(t, '1');
+  localStorage.removeItem(t);
+  storageAvailable = true;
+} catch (e) {
+  storageAvailable = false;
+}
+
+function saveCards() {
+  const s = JSON.stringify(cards);
+  if (storageAvailable) {
+    try {
+      localStorage.setItem(STORE_KEY, s);
+      return;
+    } catch (e) {
+      storageAvailable = false;
+      showStorageBanner();
+    }
+  }
+  memoryStore[STORE_KEY] = s;
+}
+
+function loadCards() {
+  let raw = null;
+  if (storageAvailable) {
+    try {
+      raw = localStorage.getItem(STORE_KEY);
+    } catch (e) {
+      storageAvailable = false;
+      showStorageBanner();
+      raw = memoryStore[STORE_KEY] || null;
+    }
+  } else {
+    raw = memoryStore[STORE_KEY] || null;
+  }
+  if (raw === null || raw === undefined) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function showStorageBanner() {
+  if (typeof document === 'undefined') return;
+  const b = document.getElementById('storageBanner');
+  if (b) b.classList.remove('hidden');
+}
+
+/* =====================================================================
+ * Dates — always Asia/Shanghai (UTC+8)
+ * ===================================================================== */
+function getTodayBeijing() {
+  const now = new Date();
+  const utc8 = new Date(now.getTime() + 8 * 3600 * 1000);
+  return utc8.toISOString().slice(0, 10);
+}
+
+function addDays(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function isDateStr(v) {
+  return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
+/* =====================================================================
+ * Deterministic daily hash (NO Math.random in the due queue)
+ * ===================================================================== */
+function dailyHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  // Murmur-style finalizer: without it, strings that share an equal-length
+  // suffix (e.g. id + same-length date) keep a constant relative order,
+  // so the daily shuffle would never actually change between days.
+  h = h ^ (h >>> 16);
+  h = Math.imul(h, 0x45d9f3b);
+  h = h ^ (h >>> 16);
+  return h;
+}
+
+/* =====================================================================
+ * Card model
+ * ===================================================================== */
+const CONTENT_FIELDS = ['meaning', 'category', 'stageWeek', 'imageUrl', 'collocation', 'definition', 'context'];
+let idCounter = 0;
+
+function newId() {
+  idCounter += 1;
+  return 'c' + Date.now().toString(36) + '-' + idCounter;
+}
+
+function clampProf(v, dflt) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return dflt;
+  return Math.min(3, Math.max(0, n));
+}
+
+function parseForce(v) {
+  return ['是', '1', 'yes', 'true', 'y'].indexOf(String(v == null ? '' : v).trim().toLowerCase()) !== -1;
+}
+
+function makeCard(o) {
+  o = o || {};
+  const ef = parseFloat(o.easeFactor);
+  return {
+    id: o.id ? String(o.id) : newId(),
+    term: o.term || '',
+    meaning: o.meaning || '',
+    category: o.category || '',
+    proficiency: clampProf(o.proficiency, 0),
+    stageWeek: o.stageWeek || '',
+    imageUrl: o.imageUrl || '',
+    collocation: o.collocation || '',
+    definition: o.definition || '',
+    context: o.context || '',
+    forceProficiency: !!o.forceProficiency,
+    easeFactor: isFinite(ef) ? ef : 2.5,
+    interval: Number.isInteger(o.interval) ? o.interval : (parseInt(o.interval, 10) || 0),
+    repetitions: Number.isInteger(o.repetitions) ? o.repetitions : (parseInt(o.repetitions, 10) || 0),
+    due: isDateStr(o.due) ? o.due : getTodayBeijing(),
+    lastReviewed: isDateStr(o.lastReviewed) ? o.lastReviewed : null,
+    reviewLog: Array.isArray(o.reviewLog) ? o.reviewLog : []
+  };
+}
+
+function seedCards() {
+  const today = getTodayBeijing();
+  return [
+    makeCard({
+      id: 'seed-1',
+      term: 'galvanic corrosion',
+      meaning: '电偶腐蚀：两种不同金属在电解质中接触时，电位较负的金属加速腐蚀的现象。CFRP 与铝合金搭接处是典型风险区。',
+      category: '腐蚀',
+      proficiency: 0,
+      stageWeek: 'Q1-W08',
+      collocation: 'galvanic corrosion between CFRP and aluminum',
+      definition: 'Galvanic corrosion occurs when two dissimilar metals are electrically coupled in the presence of an electrolyte.',
+      context: '维修侧在问：CFRP 面板与铝梁之间是否需要玻璃布隔离层？',
+      due: today
+    }),
+    makeCard({
+      id: 'seed-2',
+      term: 'torque stripe',
+      meaning: '力矩标记线：涂在螺栓/螺母上的标记漆，用于目视检查紧固件是否发生转动。',
+      category: '紧固件',
+      proficiency: 1,
+      stageWeek: 'Q1-W08',
+      collocation: 'apply a torque stripe to the fastener',
+      definition: 'A broken torque stripe indicates possible fastener rotation and requires re-torque.',
+      due: today
+    }),
+    makeCard({
+      id: 'seed-3',
+      term: 'blind rivet',
+      meaning: '抽芯铆钉（盲铆钉）：只需单侧接近即可安装的铆钉，用于无法到达结构背面的区域。',
+      category: '紧固件',
+      proficiency: 0,
+      stageWeek: 'Q1-W09',
+      context: '维修侧在问：此处能否用盲铆替代实心铆钉？需要查 SRM 哪个章节？',
+      due: today
+    })
+  ];
+}
+
+/* =====================================================================
+ * SM-2 scheduling & automatic proficiency
+ * ===================================================================== */
+function scheduleSM2(card, rating) {
+  if (rating < 3) {
+    card.repetitions = 0;
+    card.interval = 1;
+  } else {
+    if (card.repetitions === 0) {
+      card.interval = 1;
+    } else if (card.repetitions === 1) {
+      card.interval = 6;
+    } else {
+      card.interval = Math.round(card.interval * card.easeFactor);
+    }
+    card.repetitions += 1;
+  }
+  card.easeFactor = Math.max(
+    1.3,
+    card.easeFactor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02))
+  );
+  card.due = addDays(getTodayBeijing(), card.interval);
+  card.lastReviewed = getTodayBeijing();
+  return card;
+}
+
+function updateProficiency(card, rating) {
+  if (card.forceProficiency) return; // manual proficiency: skip auto update
+  if (rating <= 2) {
+    card.proficiency = 0;
+    return;
+  }
+  if (rating === 3) return;
+  // rating 4 or 5: bump only if the previous rating was also >= 4
+  const log = card.reviewLog; // called BEFORE current rating is appended
+  const prev = log.length ? log[log.length - 1].rating : null;
+  if (prev !== null && prev >= 4) {
+    card.proficiency = Math.min(3, card.proficiency + 1);
+  }
+}
+
+/* =====================================================================
+ * Due queue: proficiency ASC, then due ASC, then daily hash (stable/day)
+ * ===================================================================== */
+function getDueQueue() {
+  const today = getTodayBeijing();
+  return cards
+    .filter(function (c) { return c.due <= today; })
+    .sort(function (a, b) {
+      if (a.proficiency !== b.proficiency) return a.proficiency - b.proficiency;
+      if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+      return dailyHash(a.id + today) - dailyHash(b.id + today);
+    });
+}
+
+function getAheadQueue() {
+  const today = getTodayBeijing();
+  return cards
+    .filter(function (c) { return c.due > today; })
+    .sort(function (a, b) {
+      if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+      if (a.proficiency !== b.proficiency) return a.proficiency - b.proficiency;
+      return dailyHash(a.id + today) - dailyHash(b.id + today);
+    });
+}
+
+/* =====================================================================
+ * CSV import — column mapping + merge rules
+ * ===================================================================== */
+/* Fixed header table — any CSV column whose header matches one of these is
+ * imported; unrecognised extra columns are simply ignored. No mapping dialog. */
+const HEADER_CANDIDATES = {
+  term: ['英文表达块', 'term', '英文表达', '表达块'],
+  meaning: ['中文语境解释', '语境解释', '中文解释', 'meaning'],
+  category: ['类别', '分类', 'category'],
+  proficiency: ['熟练度', '熟练程度', 'proficiency'],
+  stageWeek: ['阶段/周', '阶段', '周次', 'stageweek', 'stage'],
+  imageUrl: ['图片', '图像', 'imageurl', 'image'],
+  collocation: ['固定搭配/句式', '固定搭配', '句式', 'collocation'],
+  definition: ['英文原句', '英文定义', '原句', 'definition'],
+  context: ['章节语境', '维修侧在问什么', '语境', 'context'],
+  forceProficiency: ['强制熟练度', '强制覆盖', 'forceproficiency'],
+  id: ['id', '编号'],
+  easeFactor: ['easefactor', '难度系数'],
+  interval: ['interval', '间隔'],
+  repetitions: ['repetitions', '重复次数'],
+  due: ['due', '到期日'],
+  lastReviewed: ['lastreviewed', '上次复习']
+};
+
+function normalizeHeader(h) {
+  return String(h == null ? '' : h)
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .replace(/[(（].*$/, '')   // strip trailing (0-3) etc.
+    .replace(/[:：].*$/, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+const KNOWN_HEADER_NORMS = (function () {
+  const set = {};
+  Object.keys(HEADER_CANDIDATES).forEach(function (k) {
+    HEADER_CANDIDATES[k].forEach(function (n) { set[normalizeHeader(n)] = k; });
+  });
+  return set;
+})();
+
+function mapColumns(headers) {
+  const normHeaders = headers.map(function (h) {
+    return { orig: h, norm: normalizeHeader(h) };
+  });
+  const mapping = {};
+  const claimed = {};
+
+  // pass 1: exact header match
+  Object.keys(HEADER_CANDIDATES).forEach(function (key) {
+    mapping[key] = '';
+    for (let i = 0; i < HEADER_CANDIDATES[key].length; i++) {
+      const want = normalizeHeader(HEADER_CANDIDATES[key][i]);
+      const hit = normHeaders.find(function (h) {
+        return h.norm === want && !claimed[h.orig];
+      });
+      if (hit) {
+        mapping[key] = hit.orig;
+        claimed[hit.orig] = key;
+        break;
+      }
+    }
+  });
+
+  // pass 2: header containing the keyword (e.g. "熟练度(0-3)分") — never steal a
+  // column already mapped, and never let 强制熟练度 leak into proficiency.
+  Object.keys(HEADER_CANDIDATES).forEach(function (key) {
+    if (mapping[key]) return;
+    const hit = normHeaders.find(function (h) {
+      if (!h.norm || claimed[h.orig]) return false;
+      if (key !== 'forceProficiency' && h.norm.indexOf('强制') !== -1) return false;
+      return HEADER_CANDIDATES[key].some(function (n) {
+        const nn = normalizeHeader(n);
+        return nn.length >= 2 && h.norm.indexOf(nn) !== -1;
+      });
+    });
+    if (hit) {
+      mapping[key] = hit.orig;
+      claimed[hit.orig] = key;
+    }
+  });
+  return mapping;
+}
+
+/* =====================================================================
+ * Built-in CSV engine (no CDN): Excel-safe.
+ * Handles UTF-8 / UTF-16 / GBK encodings, BOM, Excel's "sep=," first line,
+ * auto delimiter (comma / semicolon / tab), quoted fields with , " and \n.
+ * ===================================================================== */
+function csvEscape(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvUnparse(rows) {
+  if (!rows.length) return '';
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(function (r) {
+    lines.push(headers.map(function (h) { return csvEscape(r[h]); }).join(','));
+  });
+  return lines.join('\r\n');
+}
+
+function stripBom(text) {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+function detectDelimiter(text) {
+  const firstLine = text.split(/\r?\n/).find(function (l) { return l.trim() !== ''; }) || '';
+  const counts = { ',': 0, ';': 0, '\t': 0 };
+  let inQ = false;
+  for (let i = 0; i < firstLine.length; i++) {
+    const ch = firstLine[i];
+    if (ch === '"') inQ = !inQ;
+    else if (!inQ && counts[ch] !== undefined) counts[ch]++;
+  }
+  let best = ',';
+  Object.keys(counts).forEach(function (d) { if (counts[d] > counts[best]) best = d; });
+  return best;
+}
+
+function csvParse(text, delimiter) {
+  text = stripBom(String(text || ''));
+  delimiter = delimiter || ',';
+  const rowsOut = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === delimiter) {
+      row.push(field); field = '';
+    } else if (c === '\n') {
+      row.push(field); rowsOut.push(row); row = []; field = '';
+    } else if (c !== '\r') {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rowsOut.push(row); }
+  if (!rowsOut.length) return { headers: [], rows: [] };
+  const headers = rowsOut[0];
+  const data = rowsOut.slice(1)
+    .filter(function (r) { return r.some(function (v) { return String(v).trim() !== ''; }); })
+    .map(function (r) {
+      const o = {};
+      headers.forEach(function (h, i) { o[h] = r[i] !== undefined ? r[i] : ''; });
+      return o;
+    });
+  return { headers: headers, rows: data };
+}
+
+/* Decode a CSV file buffer. Excel on Chinese Windows writes GBK by default,
+ * which is why reading it as UTF-8 produces garbled headers. */
+function decodeCsvBuffer(buf) {
+  const bytes = new Uint8Array(buf);
+  if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+    return new TextDecoder('utf-16le').decode(buf);
+  }
+  if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+    return new TextDecoder('utf-16be').decode(buf);
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+  } catch (e) { /* not valid UTF-8 */ }
+  const legacy = ['gbk', 'gb18030', 'big5'];
+  for (let i = 0; i < legacy.length; i++) {
+    try {
+      const out = new TextDecoder(legacy[i]).decode(buf);
+      if (out && !/^.*\uFFFD.*$/s.test(out.slice(0, 200))) return out;
+    } catch (e2) { /* try next */ }
+  }
+  return new TextDecoder('utf-8').decode(buf);
+}
+
+/* Find the real header row: Excel may put a title row above it, or a "sep=,"
+ * line first. Scans the first 10 rows and picks the one with the most known
+ * column names; falls back to row 0. */
+function findHeaderRow(matrix) {
+  let bestIdx = 0, bestScore = 0;
+  const limit = Math.min(matrix.length, 10);
+  for (let i = 0; i < limit; i++) {
+    let score = 0;
+    matrix[i].forEach(function (cell) {
+      const n = normalizeHeader(cell);
+      if (n && KNOWN_HEADER_NORMS[n]) score++;
+    });
+    if (score > bestScore) { bestScore = score; bestIdx = i; }
+  }
+  return bestIdx;
+}
+
+function parseCsvText(rawText) {
+  let text = stripBom(String(rawText || ''));
+  // Excel sometimes writes "sep=," (or "sep=;") as the very first line.
+  const sepMatch = text.match(/^sep=([,;\t])\s*\r?\n/i);
+  if (sepMatch) {
+    text = text.slice(sepMatch[0].length);
+    const matrix = toMatrix(text, sepMatch[1]);
+    return buildResult(matrix, sepMatch[1]);
+  }
+  const delim = detectDelimiter(text);
+  const matrix = toMatrix(text, delim);
+  return buildResult(matrix, delim);
+}
+
+function toMatrix(text, delimiter) {
+  const raw = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === delimiter) {
+      row.push(field); field = '';
+    } else if (c === '\n') {
+      row.push(field); raw.push(row); row = []; field = '';
+    } else if (c !== '\r') {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); raw.push(row); }
+  return raw;
+}
+
+function buildResult(matrix, delimiter) {
+  const meaningful = matrix.filter(function (r) {
+    return r.some(function (v) { return String(v).trim() !== ''; });
+  });
+  if (!meaningful.length) return { headers: [], rows: [], delimiter: delimiter };
+  const hIdx = findHeaderRow(meaningful);
+  // drop the sep line / title rows above the header
+  const table = meaningful.slice(hIdx);
+  const headers = [];
+  table[0].forEach(function (h, i) {
+    let name = String(h == null ? '' : h).replace(/^\uFEFF/, '').trim();
+    if (!name) return; // unnamed column -> ignored
+    if (headers.indexOf(name) !== -1) {
+      let suffix = 2;
+      while (headers.indexOf(name + ' (' + suffix + ')') !== -1) suffix++;
+      name = name + ' (' + suffix + ')';
+    }
+    headers.push(name);
+  });
+  const rows = table.slice(1).map(function (r) {
+    const o = {};
+    headers.forEach(function (h, i) { o[h] = r[i] !== undefined ? r[i] : ''; });
+    return o;
+  });
+  return { headers: headers, rows: rows, delimiter: delimiter, headerRow: hIdx };
+}
+
+function importCSV(file) {
+  const name = (file.name || '').toLowerCase();
+  if (/\.(xlsx|xls)$/.test(name)) {
+    alert('这是 Excel 工作簿（.xlsx/.xls），无法直接读取。\n请在 Excel 中「另存为 → CSV（逗号分隔）」后再导入。');
+    return;
+  }
+  if (name && !/\.(csv|txt|tsv)$/.test(name) &&
+      !confirm('所选文件「' + file.name + '」看起来不是 CSV，仍要尝试导入吗？')) {
+    return;
+  }
+  if (file.size === 0) {
+    alert('文件是空的，请检查导出是否完整。');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const text = decodeCsvBuffer(reader.result);
+      const parsed = parseCsvText(text);
+      if (!parsed.headers.length) {
+        alert('CSV 解析失败：未检测到表头');
+        return;
+      }
+      const mapping = mapColumns(parsed.headers);
+      if (!mapping.term || !mapping.meaning) {
+        alert('未找到必需列。\n\n需要：英文表达块（term）、中文语境解释（meaning）\n检测到的表头：\n' +
+          parsed.headers.join(' | '));
+        return;
+      }
+      const summary = applyImport(parsed.rows, mapping);
+      showImportSummary(summary, parsed, mapping);
+      queue = [];
+      reviewAheadMode = false;
+      renderReview();
+      renderStats();
+    } catch (e) {
+      alert('CSV 解析失败: ' + e.message);
+    }
+  };
+  reader.onerror = function () {
+    alert('读取文件失败。\n如果是手机浏览器（尤其微信内置浏览器），请改用系统浏览器（Safari / Chrome）打开本页后重试。');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showImportSummary(summary, parsed, mapping) {
+  const el = document.getElementById('importSummary');
+  if (!el) return;
+  const usedKeys = Object.keys(mapping).filter(function (k) { return mapping[k]; });
+  const usedHeaders = usedKeys.map(function (k) { return mapping[k]; });
+  const ignored = parsed.headers.filter(function (h) {
+    return usedHeaders.indexOf(h) === -1;
+  });
+
+  let text = summary.newCount + ' new, ' + summary.updated + ' content-updated, ' +
+    summary.protected + ' proficiency-protected, ' + summary.forced + ' proficiency-forced, ' +
+    summary.unchanged + ' unchanged' +
+    (summary.skipped ? '（跳过 ' + summary.skipped + ' 行空 term）' : '');
+  text += '\n已导入字段：' + usedKeys.map(function (k) {
+    return k + ' ← ' + mapping[k];
+  }).join('，');
+  if (ignored.length) {
+    text += '\n忽略未匹配列：' + ignored.join('、');
+  }
+  if (parsed.delimiter !== ',') {
+    text += '\n分隔符：' + (parsed.delimiter === '\t' ? '制表符' : '分号');
+  }
+  el.textContent = text;
+  if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function applyImport(rows, mapping) {
+  const byTerm = new Map();
+  cards.forEach(function (c) { byTerm.set(c.term, c); });
+  const summary = { newCount: 0, updated: 0, protected: 0, forced: 0, unchanged: 0, skipped: 0 };
+
+  const get = function (row, key) {
+    const h = mapping[key];
+    if (!h) return '';
+    const v = row[h];
+    return v === undefined || v === null ? '' : String(v).trim();
+  };
+
+  rows.forEach(function (row) {
+    const term = get(row, 'term');
+    if (!term) {
+      summary.skipped++;
+      return;
+    }
+    const profRaw = get(row, 'proficiency');
+    const force = parseForce(get(row, 'forceProficiency'));
+    const existing = byTerm.get(term);
+
+    if (!existing) {
+      // New card: CSV supplies initial content AND (for backup round-trips) SRS state.
+      const efRaw = parseFloat(get(row, 'easeFactor'));
+      const card = makeCard({
+        id: get(row, 'id') || undefined,
+        term: term,
+        meaning: get(row, 'meaning'),
+        category: get(row, 'category'),
+        proficiency: profRaw === '' ? 0 : clampProf(profRaw, 0),
+        stageWeek: get(row, 'stageWeek'),
+        imageUrl: get(row, 'imageUrl'),
+        collocation: get(row, 'collocation'),
+        definition: get(row, 'definition'),
+        context: get(row, 'context'),
+        forceProficiency: force,
+        easeFactor: isFinite(efRaw) ? efRaw : 2.5,
+        interval: parseInt(get(row, 'interval'), 10) || 0,
+        repetitions: parseInt(get(row, 'repetitions'), 10) || 0,
+        due: isDateStr(get(row, 'due')) ? get(row, 'due') : getTodayBeijing()
+      });
+      cards.push(card);
+      byTerm.set(term, card);
+      summary.newCount++;
+      if (force) summary.forced++;
+      return;
+    }
+
+    // Existing card: CSV owns content fields only; SRS state is never touched.
+    let changed = false;
+    CONTENT_FIELDS.forEach(function (f) {
+      const v = get(row, f);
+      if (v !== '' && v !== existing[f]) {
+        existing[f] = v;
+        changed = true;
+      }
+    });
+
+    if (force) {
+      if (profRaw !== '') existing.proficiency = clampProf(profRaw, existing.proficiency);
+      existing.forceProficiency = true;
+      summary.forced++;
+    } else if (profRaw !== '' && clampProf(profRaw, existing.proficiency) !== existing.proficiency) {
+      // App-maintained proficiency wins over stale CSV value.
+      summary.protected++;
+    }
+
+    if (changed) summary.updated++;
+    else if (!force) summary.unchanged++;
+  });
+
+  saveCards();
+  return summary;
+}
+
+/* =====================================================================
+ * Review UI
+ * ===================================================================== */
+let cards = [];
+let queue = [];
+let reviewAheadMode = false;
+let lastReviewInfo = null;
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function truncate(s, n) {
+  s = String(s || '');
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+/* ---------- Text-to-speech (Web Speech API, built in, no network) ---------- */
+const SPEAKER_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M11 5 6 9H2v6h4l5 4V5z"/>' +
+  '<path d="M15.5 8.5a5 5 0 0 1 0 7"/>' +
+  '<path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+function canSpeak() {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+}
+
+/* Small speaker button; text is carried in data-speak so no inline JS is needed
+ * (escaped, so quotes/Chinese are safe). */
+function speakButton(text) {
+  const t = String(text == null ? '' : text).trim();
+  if (!t || !canSpeak()) return '';
+  return '<button type="button" class="speak-btn" data-speak="' + escapeHtml(t) +
+    '" aria-label="朗读" title="朗读">' + SPEAKER_ICON + '</button>';
+}
+
+function speakText(text) {
+  if (!text || !canSpeak()) return;
+  window.speechSynthesis.cancel(); // stop anything already playing
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.92;
+  window.speechSynthesis.speak(u);
+}
+
+function stopSpeaking() {
+  if (canSpeak()) window.speechSynthesis.cancel();
+}
+
+function handleImageError(img) {
+  const div = document.createElement('div');
+  div.className = 'img-placeholder';
+  div.textContent = '图片未找到: ' + img.getAttribute('src');
+  if (img.parentNode) img.parentNode.replaceChild(div, img);
+}
+
+function renderReview() {
+  const frontEl = document.getElementById('cardFront');
+  const backEl = document.getElementById('cardBack');
+  const showBtn = document.getElementById('showAnswerBtn');
+  const ratingsEl = document.getElementById('ratingButtons');
+  const caughtUp = document.getElementById('caughtUp');
+  const cardView = document.getElementById('cardView');
+  const aheadBanner = document.getElementById('aheadBanner');
+  const queueInfo = document.getElementById('queueInfo');
+  const aheadBtn = document.getElementById('reviewAheadBtn');
+  const backBtn = document.getElementById('backToDueBtn');
+
+  if (!queue.length) {
+    queue = reviewAheadMode ? getAheadQueue() : getDueQueue();
+  }
+
+  if (!queue.length) {
+    cardView.classList.add('hidden');
+    caughtUp.classList.remove('hidden');
+    const aheadCount = getAheadQueue().length;
+    if (!reviewAheadMode && aheadCount > 0) {
+      aheadBtn.classList.remove('hidden');
+      backBtn.classList.add('hidden');
+      document.getElementById('caughtUpHint').textContent =
+        '还有 ' + aheadCount + ' 张未到期卡片可提前复习。';
+    } else if (reviewAheadMode) {
+      aheadBtn.classList.add('hidden');
+      backBtn.classList.remove('hidden');
+      document.getElementById('caughtUpHint').textContent = '提前复习队列已完成。';
+    } else {
+      aheadBtn.classList.add('hidden');
+      backBtn.classList.add('hidden');
+      document.getElementById('caughtUpHint').textContent = '今天没有到期的卡片。';
+    }
+    queueInfo.textContent = '';
+    return;
+  }
+
+  cardView.classList.remove('hidden');
+  caughtUp.classList.add('hidden');
+  backEl.classList.add('hidden');
+  frontEl.classList.remove('hidden');
+  ratingsEl.classList.add('hidden');
+  showBtn.classList.remove('hidden');
+  aheadBanner.classList.toggle('hidden', !reviewAheadMode);
+  queueInfo.textContent = '队列剩余 ' + queue.length + ' 张' + (reviewAheadMode ? '（提前复习）' : '');
+
+  const c = queue[0];
+  let html = '';
+  if (c.imageUrl) {
+    // Front: image as prompt; NEVER the English term.
+    html += '<img class="front-img" src="' + escapeHtml(c.imageUrl) + '" alt="" onerror="handleImageError(this)">';
+    html += '<div class="tag-row">' + (c.category ? '<span class="tag">' + escapeHtml(c.category) + '</span>' : '') + '</div>';
+    if (c.meaning && c.meaning.length < 60) {
+      html += '<p class="hint">' + escapeHtml(c.meaning) + '</p>';
+    }
+  } else {
+    html += '<p class="prompt">' + escapeHtml(truncate(c.meaning, 60)) + '</p>';
+    html += '<div class="tag-row">' + (c.category ? '<span class="tag">' + escapeHtml(c.category) + '</span>' : '') + '</div>';
+  }
+  frontEl.innerHTML = html;
+}
+
+function showAnswer() {
+  const c = queue[0];
+  if (!c) return;
+  const backEl = document.getElementById('cardBack');
+
+  let html = '<div class="back-term">' + escapeHtml(c.term) + speakButton(c.term) + '</div>';
+  if (c.collocation) {
+    html += '<div class="back-row"><span class="back-label">固定搭配 / Collocation</span>' +
+      '<div>' + escapeHtml(c.collocation) + speakButton(c.collocation) + '</div></div>';
+  }
+  html += '<div class="back-meaning">' + escapeHtml(c.meaning) + '</div>';
+  if (c.definition) {
+    html += '<div class="back-row"><span class="back-label">英文原句 / Definition</span>' +
+      '<div class="def-box">' + escapeHtml(c.definition) + speakButton(c.definition) + '</div></div>';
+  }
+  if (c.context) {
+    html += '<div class="back-row"><span class="back-label">章节语境 / Context</span>' +
+      '<div class="context">' + escapeHtml(c.context) + '</div></div>';
+  }
+  html += '<div class="meta">' +
+    escapeHtml(c.stageWeek || '—') +
+    ' · 熟练度 ' + c.proficiency + '/3' +
+    ' · EF ' + c.easeFactor.toFixed(2) +
+    ' · 间隔 ' + c.interval + ' 天' +
+    ' · 到期 ' + c.due +
+    '</div>';
+  if (c.forceProficiency) {
+    html += '<span class="badge">手动熟练度</span>';
+  }
+  if (c.imageUrl) {
+    html += '<img class="back-img" src="' + escapeHtml(c.imageUrl) + '" alt="" onerror="handleImageError(this)">';
+  }
+
+  backEl.innerHTML = html;
+  backEl.classList.remove('hidden');
+  document.getElementById('cardFront').classList.add('hidden'); // back replaces front
+  document.getElementById('showAnswerBtn').classList.add('hidden');
+  document.getElementById('ratingButtons').classList.remove('hidden');
+}
+
+function rateCard(rating) {
+  const c = queue[0];
+  if (!c) return;
+  stopSpeaking();
+  const oldEF = c.easeFactor;
+  const oldProf = c.proficiency;
+
+  scheduleSM2(c, rating);
+  updateProficiency(c, rating); // reads reviewLog BEFORE current entry is appended
+  c.reviewLog.push({ date: getTodayBeijing(), rating: rating });
+
+  lastReviewInfo = {
+    term: c.term,
+    rating: rating,
+    oldEF: oldEF,
+    newEF: c.easeFactor,
+    interval: c.interval,
+    due: c.due,
+    oldProf: oldProf,
+    newProf: c.proficiency
+  };
+
+  saveCards();
+  queue.shift();
+  renderReview();
+  renderStats();
+}
+
+/* =====================================================================
+ * Stats / dashboard
+ * ===================================================================== */
+function renderStats() {
+  const today = getTodayBeijing();
+  const dueCount = cards.filter(function (c) { return c.due <= today; }).length;
+  const forceCount = cards.filter(function (c) { return c.forceProficiency; }).length;
+
+  const grid = document.getElementById('statGrid');
+  grid.innerHTML = '';
+  [
+    { num: cards.length, label: '总卡片数' },
+    { num: dueCount, label: '今日到期' },
+    { num: forceCount, label: '手动熟练度' }
+  ].forEach(function (s) {
+    grid.innerHTML += '<div class="stat-box"><div class="stat-num">' + s.num +
+      '</div><div class="stat-label">' + s.label + '</div></div>';
+  });
+
+  // proficiency distribution
+  const profCounts = [0, 0, 0, 0];
+  cards.forEach(function (c) { profCounts[c.proficiency] = (profCounts[c.proficiency] || 0) + 1; });
+  renderBars(document.getElementById('profStats'), profCounts.map(function (n, i) {
+    return { name: '熟练度 ' + i, count: n };
+  }));
+
+  // category distribution
+  const catMap = {};
+  cards.forEach(function (c) {
+    const k = c.category || '（未分类）';
+    catMap[k] = (catMap[k] || 0) + 1;
+  });
+  const catRows = Object.keys(catMap).sort().map(function (k) {
+    return { name: k, count: catMap[k] };
+  });
+  renderBars(document.getElementById('catStats'), catRows);
+
+  drawWeekChart();
+
+  // settings: storage info
+  const si = document.getElementById('storageInfo');
+  if (si) {
+    si.textContent = '存储引擎: ' + (storageAvailable ? 'localStorage' : '内存（localStorage 不可用）') +
+      ' · key: ' + STORE_KEY + ' · 卡片数: ' + cards.length;
+  }
+
+  // debug panel
+  const dbg = document.getElementById('debugInfo');
+  const utcDate = new Date().toISOString().slice(0, 10);
+  let txt = 'today (UTC+8): ' + today + '\nUTC date: ' + utcDate +
+    '\nstorage: ' + (storageAvailable ? 'localStorage' : 'in-memory (localStorage unavailable)') +
+    '\nMath.random used in getDueQueue: no (dailyHash only)';
+  if (lastReviewInfo) {
+    txt += '\n\nlast review: ' + lastReviewInfo.term +
+      '\n  rating: ' + lastReviewInfo.rating +
+      '\n  easeFactor: ' + lastReviewInfo.oldEF.toFixed(2) + ' → ' + lastReviewInfo.newEF.toFixed(2) +
+      '\n  interval: ' + lastReviewInfo.interval + ' 天' +
+      '\n  due: ' + lastReviewInfo.due +
+      '\n  proficiency: ' + lastReviewInfo.oldProf + ' → ' + lastReviewInfo.newProf;
+  }
+  dbg.textContent = txt;
+}
+
+function renderBars(el, rows) {
+  if (!rows.length) {
+    el.innerHTML = '<p class="muted small">暂无数据</p>';
+    return;
+  }
+  const max = Math.max.apply(null, rows.map(function (r) { return r.count; }).concat([1]));
+  el.innerHTML = rows.map(function (r) {
+    const pct = Math.round((r.count / max) * 100);
+    return '<div class="bar-row">' +
+      '<span class="bar-name" title="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) + '</span>' +
+      '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+      '<span class="bar-count">' + r.count + '</span></div>';
+  }).join('');
+}
+
+function drawWeekChart() {
+  const canvas = document.getElementById('weekChart');
+  if (!canvas || !canvas.parentElement) return;
+  const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  const width = Math.max(280, canvas.parentElement.clientWidth - 4);
+  const height = 160;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, width, height);
+
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(addDays(getTodayBeijing(), -i));
+  const counts = days.map(function (d) {
+    return cards.reduce(function (n, c) {
+      return n + c.reviewLog.filter(function (e) { return e.date === d; }).length;
+    }, 0);
+  });
+
+  const max = Math.max.apply(null, counts.concat([1]));
+  const padL = 8, padB = 22, padT = 18;
+  const bw = (width - padL * 2) / 7;
+
+  ctx.textAlign = 'center';
+  days.forEach(function (d, i) {
+    const h = counts[i] === 0 ? 0 : Math.max(4, (counts[i] / max) * (height - padT - padB));
+    const w = bw * 0.6;
+    const x = padL + i * bw + (bw - w) / 2;
+    const y = height - padB - h;
+    ctx.fillStyle = '#2563eb';
+    ctx.fillRect(x, y, w, h);
+    if (counts[i] > 0) {
+      ctx.fillStyle = '#1c2733';
+      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.fillText(String(counts[i]), x + w / 2, y - 5);
+    }
+    ctx.fillStyle = '#6b7a89';
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillText(d.slice(5), x + w / 2, height - 7);
+  });
+}
+
+/* =====================================================================
+ * Export / backup
+ * ===================================================================== */
+function download(content, filename, mime) {
+  const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function exportCSV() {
+  const rows = cards.map(function (c) {
+    return {
+      id: c.id,
+      term: c.term,
+      meaning: c.meaning,
+      category: c.category,
+      proficiency: c.proficiency,
+      stageWeek: c.stageWeek,
+      imageUrl: c.imageUrl,
+      collocation: c.collocation,
+      definition: c.definition,
+      context: c.context,
+      forceProficiency: c.forceProficiency ? '是' : '',
+      easeFactor: c.easeFactor,
+      interval: c.interval,
+      repetitions: c.repetitions,
+      due: c.due
+    };
+  });
+  try {
+    // BOM so Excel opens UTF-8 Chinese correctly
+    download('﻿' + csvUnparse(rows), 'faa-cards-' + getTodayBeijing() + '.csv', 'text/csv');
+  } catch (e) {
+    alert('导出失败: ' + e.message);
+  }
+}
+
+function exportJSON() {
+  const payload = {
+    version: 1,
+    exported: getTodayBeijing(),
+    cards: cards
+  };
+  download(JSON.stringify(payload, null, 2), 'faa-cards-backup-' + getTodayBeijing() + '.json', 'application/json');
+}
+
+function importJSON(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name && !/\.(json|txt)$/.test(name) &&
+      !confirm('所选文件「' + file.name + '」不是 .json 备份，仍要尝试导入吗？')) {
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const data = JSON.parse(reader.result);
+      const arr = Array.isArray(data) ? data : data.cards;
+      if (!Array.isArray(arr)) throw new Error('未找到 cards 数组');
+      if (!confirm('将用备份覆盖当前 ' + cards.length + ' 张卡片（备份含 ' + arr.length + ' 张）。确定继续？')) {
+        return;
+      }
+      cards = arr.map(function (o) { return makeCard(o); });
+      saveCards();
+      queue = [];
+      reviewAheadMode = false;
+      renderReview();
+      renderStats();
+      alert('备份恢复完成');
+    } catch (e) {
+      alert('JSON 导入失败: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* =====================================================================
+ * Init & event wiring
+ * ===================================================================== */
+function renderAll() {
+  renderReview();
+  renderStats();
+}
+
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(function (v) {
+    v.classList.toggle('active', v.id === 'view-' + name);
+  });
+  document.querySelectorAll('.nav-item').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.view === name);
+  });
+  if (name === 'stats') renderStats(); // canvas needs a visible parent to size correctly
+  if (typeof window !== 'undefined') window.scrollTo(0, 0);
+}
+
+function clearData() {
+  if (!confirm('将删除全部 ' + cards.length + ' 张卡片及所有复习记录，且无法恢复。\n建议先导出 JSON 备份。确定清空？')) return;
+  if (!confirm('再次确认：真的要清空所有数据吗？')) return;
+  cards = [];
+  saveCards();
+  queue = [];
+  reviewAheadMode = false;
+  lastReviewInfo = null;
+  const summary = document.getElementById('importSummary');
+  if (summary) summary.textContent = '';
+  renderAll();
+  alert('已清空所有数据');
+}
+
+function init() {
+  if (!storageAvailable) showStorageBanner();
+
+  const loaded = loadCards();
+  if (loaded && Array.isArray(loaded)) {
+    cards = loaded.map(function (o) { return makeCard(o); });
+  } else {
+    cards = seedCards();
+    saveCards();
+  }
+
+  document.querySelectorAll('.nav-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      switchView(btn.dataset.view);
+    });
+  });
+
+  document.getElementById('clearDataBtn').addEventListener('click', clearData);
+
+  document.getElementById('showAnswerBtn').addEventListener('click', showAnswer);
+
+  // Speaker buttons are re-rendered on every card, so delegate the clicks.
+  document.getElementById('cardBack').addEventListener('click', function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest('.speak-btn') : null;
+    if (!btn) return;
+    e.stopPropagation();
+    speakText(btn.getAttribute('data-speak'));
+  });
+
+  document.querySelectorAll('#ratingButtons button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      rateCard(parseInt(btn.dataset.rating, 10));
+    });
+  });
+
+  document.getElementById('reviewAheadBtn').addEventListener('click', function () {
+    reviewAheadMode = true;
+    queue = [];
+    renderReview();
+  });
+
+  document.getElementById('backToDueBtn').addEventListener('click', function () {
+    reviewAheadMode = false;
+    queue = [];
+    renderReview();
+  });
+
+  // File pickers use native <label> activation — no JS click forwarding needed.
+  document.getElementById('csvFileInput').addEventListener('change', function (e) {
+    const f = e.target.files && e.target.files[0];
+    if (f) importCSV(f);
+    e.target.value = '';
+  });
+
+  document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+  document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+
+  document.getElementById('jsonFileInput').addEventListener('change', function (e) {
+    const f = e.target.files && e.target.files[0];
+    if (f) importJSON(f);
+    e.target.value = '';
+  });
+
+  window.addEventListener('resize', drawWeekChart);
+
+  renderAll();
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', init);
+}
+
+</script>
+</body>
+</html>

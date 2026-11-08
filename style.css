@@ -202,6 +202,30 @@ button.danger:hover { background: #fef2f2; border-color: var(--danger); }
   letter-spacing: 0.01em;
 }
 .back-row { margin-bottom: 14px; }
+
+/* Pronunciation button — inline next to English text on the card back */
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: var(--accent);
+  cursor: pointer;
+  vertical-align: middle;
+  flex: 0 0 auto;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.speak-btn:hover { background: #e0e7ff; }
+.speak-btn:active { transform: scale(0.9); background: #dbeafe; }
+.speak-btn svg { width: 16px; height: 16px; display: block; }
+.def-box .speak-btn { margin-left: 8px; }
 .back-label {
   display: block;
   font-size: 11px;
